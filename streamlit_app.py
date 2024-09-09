@@ -71,6 +71,3 @@ if st.button("Process Files"):
     else:
         st.error("Please upload at least one text file.")
 
-# Display an arrow image to guide users to the next step
-st.write("Proceed to the next step below:")
-st.image("https://banner2.cleanpng.com/20180408/rpq/kisspng-application-for-employment-employment-website-care-down-arrow-5acac5ad9e6b47.1219531015232383176489.jpg", use_column_width=True)  # Display an arrow image at the end
