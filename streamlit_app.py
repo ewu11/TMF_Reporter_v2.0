@@ -71,3 +71,6 @@ if st.button("Process Files"):
     else:
         st.error("Please upload at least one text file.")
 
+# Display an arrow image to guide users to the next step
+st.write("Proceed to the next step below:")
+st.image("arrow.png", use_column_width=True)  # Display an arrow image at the end
