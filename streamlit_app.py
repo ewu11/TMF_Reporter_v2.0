@@ -1,9 +1,7 @@
 import streamlit as st
 import re
-import os
-from pathlib import Path
 
-# Define the main function to run in Streamlit
+# Function to filter messages based on base names
 def filter_messages(file_contents, base_names):
     timestamp_pattern = re.compile(r'\[\d{2}:\d{2}, \d{1,2}/\d{1,2}/\d{4}\]|^\[\d{1,2}/\d{1,2}/\d{4} \d{1,2}:\d{2} [APM]{2}]')
 
@@ -43,128 +41,36 @@ def filter_messages(file_contents, base_names):
 
     return filtered_text
 
-# Function to process the text file input
-def process_messages_from_file(content):
-    global global_result
-
-    # Split content into individual messages based on the pattern of new blocks
-    messages = re.split(r'\n(?=\[\d{1,2}/\d{1,2}/\d{4} \d{1,2}:\d{2} (?:am|pm)\])|\[\d{2}:\d{2}, \d{1,2}/\d{1,2}/\d{4}\]', content)
-
-    # Regular expressions for different patterns
-    ticket_order_pattern = r'\b1-\d{9,11}\b|\bT-\d{9}\b|\bt-\d{10}\b|\b1-[a-z0-9]{7}\b|\binc\b'  # Ticket or order numbers
-    id_pattern = r'\bQ\d{6}\b|\bq\d{6}\b|\bTM\d{5}\b|\btm\d{5}\b'  # ID numbers (e.g., Q107888)
-
-    # Issue-specific patterns
-    issue_patterns = {
-        "Full Capping": r'\bfull cap[p]?ing\b',
-        "Order Missing/ Pending Processing": r'\b(di|dlm|dalam) (oal|order(?: activity)?(?: list)?)\b',
-        "Missing Manual Assign Button": r'\bma\b',  # ma btn xappear
-    }
-
-    # Result storage for this run
-    result = {
-        "Full Capping": [],
-        "Order Missing/ Pending Processing": [],
-        "Missing Manual Assign Button": [],
-        "Other": []
-    }
-
-    # Track tickets and IDs already added
-    added_tickets = set()
-    added_ids = set()
-
-    # Process each message block
-    for message in messages:
-        found_issue = False
-
-        # Check for issues and collect tickets/IDs
-        for issue, pattern in issue_patterns.items():
-            if re.search(pattern, message, re.IGNORECASE):
-                tickets = re.findall(ticket_order_pattern, message)
-                ids = re.findall(id_pattern, message)
-
-                # For "Full Capping," capture only IDs
-                if issue == "Full Capping":
-                    if ids:
-                        global_result[issue].extend(i for i in ids if i not in added_ids)
-                        added_ids.update(ids)
-                else:
-                    # For other issues, capture both tickets and IDs
-                    if tickets:
-                        global_result[issue].extend(t for t in tickets if t not in added_tickets)
-                        added_tickets.update(tickets)
-                    if ids:
-                        global_result[issue].extend(i for i in ids if i not in added_ids)
-                        added_ids.update(ids)
-
-                found_issue = True
-                break  # Stop once a matching issue is found
-
-        # If no specific issue is found, categorize under "Other" and store both the message and ticket/ID
-        if not found_issue:
-            tickets = re.findall(ticket_order_pattern, message)
-            ids = re.findall(id_pattern, message)
-            if tickets or ids:
-                if tickets:
-                    global_result["Other"].extend([(t, message) for t in tickets if t not in added_tickets])
-                    added_tickets.update(tickets)
-                if ids:
-                    global_result["Other"].extend([(i, message) for i in ids if i not in added_ids])
-                    added_ids.update(ids)
-
-# Function to process all text files uploaded
-def process_uploaded_files(uploaded_files):
-    global global_result
-    global_result = {  # Reset global result each time files are processed
-        "Full Capping": [],
-        "Order Missing/ Pending Processing": [],
-        "Missing Manual Assign Button": [],
-        "Other": []
-    }
-
-    for uploaded_file in uploaded_files:
-        content = uploaded_file.read().decode("utf-8")  # Decode file content
-        process_messages_from_file(content)
-
-    return global_result
-
 # Streamlit app starts here
-st.title("Message Filter and Categorization App")
+st.title("Message Filter App")
 
 # Step 1: Upload the files
 uploaded_files = st.file_uploader("Upload text files", type="txt", accept_multiple_files=True)
 
 # Specify base names for filtering
-base_names = ['Hartina', 'Tina', 'Normah', 'Pom', 'Afizan', 'Pijan', 'Ariff', 'Dheffirdaus', 'Dhef', 'Hazrina', 'Rina', 'Nurul', 'Huda', 'Zazarida', 'Zaza', 'Eliasaph Wan', 'Wan', '] : ', '] :']
+base_names = ['Hartina', 'Tina', 'Normah', 'Pom',  'Afizan', 'Pijan', 'Ariff', 'Dheffirdaus', 'Dhef', 'Hazrina', 'Rina', 'Nurul', 'Huda', 'Zazarida', 'Zaza', 'Eliasaph Wan', 'Wan', '] : ', '] :']
 
-# Step 2: Display process button after files are uploaded
+# Initialize a variable to hold filtered results
+filtered_results = {}
+
+# Step 2: Process files when the button is clicked
 if uploaded_files:
-    if st.button("Filter and Categorize Files"):
+    if st.button("Process Files"):
         st.write("Processing files...")
 
-        # Process each file for filtering and categorization
+        # Process each file
         for uploaded_file in uploaded_files:
             # Read file content
             file_content = uploaded_file.read().decode("utf-8")
 
             # Apply message filtering
             filtered_text = filter_messages(file_content, base_names)
-            st.subheader(f"Filtered output for {uploaded_file.name}")
-            st.text_area(f"Filtered content from {uploaded_file.name}", filtered_text, height=300)
 
-            # Apply categorization logic
-            result = process_uploaded_files(uploaded_files)
+            # Store the result in the dictionary
+            filtered_results[uploaded_file.name] = filtered_text
 
-            # Display results for each issue category
-            for issue, entries in result.items():
-                if entries:
-                    st.subheader(f"{issue}:")
-                    if issue == "Other":
-                        for number, message in entries:
-                            st.text(f"{number} - Message: {message}")
-                    else:
-                        for number in entries:
-                            st.text(number)
+        # Display the result in a text area for each file
+        for file_name, filtered_text in filtered_results.items():
+            st.subheader(f"Filtered output for {file_name}")
+            st.text_area(f"Filtered content from {file_name}", filtered_text, height=300)
 
-    else:
-        st.error("Please upload at least one text file.")
