@@ -98,8 +98,10 @@ def process_uploaded_files(uploaded_files):
 
     for uploaded_file in uploaded_files:
         content = uploaded_file.read().decode("utf-8")
+        st.write(f"Processing file: {uploaded_file.name}")  # Debug statement
         process_messages_from_file(content)
 
+    st.write(f"Global Result: {global_result}")  # Debug statement
     return global_result
 
 # Streamlit app starts here
