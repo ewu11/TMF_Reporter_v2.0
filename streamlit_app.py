@@ -140,6 +140,8 @@ if uploaded_files:
     if st.button("Filter and Categorize Files"):
         st.write("Processing files...")
 
+        combined_output = ""
+
         # Process each file for filtering and categorization
         for uploaded_file in uploaded_files:
             # Read file content
@@ -147,17 +149,28 @@ if uploaded_files:
 
             # Apply message filtering
             filtered_text = filter_messages(file_content, base_names)
-            st.subheader(f"Filtered output for {uploaded_file.name}")
-            st.text_area(f"Filtered content from {uploaded_file.name}", filtered_text, height=300)
+            combined_output += f"Filtered output for {uploaded_file.name}:\n{filtered_text}\n\n"
 
-            # Apply categorization logic
-            result = process_uploaded_files(uploaded_files)
+        # Apply categorization logic
+        result = process_uploaded_files(uploaded_files)
 
-            # Display categorized results for each issue category
-            for issue, entries in result.items():
-                if entries:
-                    categorized_output = "\n".join([f"{number} - Message: {message}" if issue == "Other" else number for number, message in entries]) if issue == "Other" else "\n".join(entries)
-                    st.text_area(f"{issue} for {uploaded_file.name}", categorized_output, height=150)
+        # Format the categorized results
+        categorized_output = "Categorized Results:\n"
+        for issue, entries in result.items():
+            if entries:
+                categorized_output += f"\n{issue}:\n"
+                if issue == "Other":
+                    for number, message in entries:
+                        categorized_output += f"{number} - Message: {message}\n"
+                else:
+                    for number in entries:
+                        categorized_output += f"{number}\n"
+
+        # Display the filtered content
+        st.text_area("Filtered Content", combined_output, height=300)
+
+        # Display the categorized results in the text area
+        st.text_area("Categorized Results", categorized_output, height=300)
 
 else:
-    st.warning("Please upload at least one text file.")
+    st.error("Please upload at least one text file.")
