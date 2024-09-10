@@ -1,75 +1,37 @@
-# import re
-# import streamlit as st
-
-# # Function to filter messages based on base names
-# def filter_messages(file_contents, base_names):
-#     timestamp_pattern = re.compile(r'\[\d{2}:\d{2}, \d{1,2}/\d{1,2}/\d{4}\]|^\[\d{1,2}/\d{1,2}/\d{4} \d{1,2}:\d{2} [APM]{2}]')
-#     name_patterns = [re.compile(rf'\b{re.escape(name)}\b', re.IGNORECASE) for name in base_names]
-
-#     filtered_lines = []
-#     skip_block = False
-#     current_message = []
-
-#     for line in file_contents.splitlines():
-#         if timestamp_pattern.match(line):
-#             if current_message:
-#                 filtered_lines.append(' '.join(current_message).strip().lower())
-#                 current_message = []
-
-#             if any(pattern.search(line) for pattern in name_patterns):
-#                 skip_block = True
-#             else:
-#                 skip_block = False
-
-#         if not skip_block:
-#             current_message.append(line.strip().lower())
-
-#     if not skip_block and current_message:
-#         filtered_lines.append(' '.join(current_message).strip().lower())
-
-#     return '\n\n'.join(filtered_lines)
-
-# # Streamlit interface
-# st.title("Message Filtering App")
-
-# # Input area for base names
-# base_names_input = st.text_area("Enter base names (comma-separated)", "Hartina, Tina, Normah, Pom, Afizan, Pijan, Ariff, Dheffirdaus, Dhef, Hazrina, Rina, Nurul, Huda, Zazarida, Zaza, Eliasaph Wan, Wan, ] : , ] :")
-# base_names = [name.strip() for name in base_names_input.split(",")]
-
-# # File upload (without max_files argument)
-# uploaded_files = st.file_uploader("Upload text files", type="txt", accept_multiple_files=True)
-
-# # Ensure only up to 2 files are processed
-# if uploaded_files and len(uploaded_files) > 2:
-#     st.error("You can only upload up to 2 files.")
-# else:
-#     if uploaded_files and st.button('Cleanse file'):
-#         all_output = []
-        
-#         for uploaded_file in uploaded_files:
-#             file_contents = uploaded_file.read().decode("utf-8")
-#             filtered_text = filter_messages(file_contents, base_names)
-#             all_output.append(f"===Filtered content from {uploaded_file.name}:===\n{filtered_text}")
-        
-#         combined_output = "\n".join(all_output)
-        
-#         # Insert CSS to disable the cursor change for disabled text_area
-#         st.markdown(
-#             """
-#             <style>
-#             .stTextArea textarea[disabled] {
-#                 cursor: default;
-#             }
-#             </style>
-#             """,
-#             unsafe_allow_html=True
-#         )
-
-#         # Display the output in a disabled text area
-#         st.text_area("Filtered Output", value=combined_output, height=400, disabled=True)
-
 import re
 import streamlit as st
+
+# --- Process 1: Filtering messages based on base names ---
+
+# Function to filter messages based on base names
+def filter_messages(file_contents, base_names):
+    timestamp_pattern = re.compile(r'\[\d{2}:\d{2}, \d{1,2}/\d{1,2}/\d{4}\]|^\[\d{1,2}/\d{1,2}/\d{4} \d{1,2}:\d{2} [APM]{2}]')
+    name_patterns = [re.compile(rf'\b{re.escape(name)}\b', re.IGNORECASE) for name in base_names]
+
+    filtered_lines = []
+    skip_block = False
+    current_message = []
+
+    for line in file_contents.splitlines():
+        if timestamp_pattern.match(line):
+            if current_message:
+                filtered_lines.append(' '.join(current_message).strip().lower())
+                current_message = []
+
+            if any(pattern.search(line) for pattern in name_patterns):
+                skip_block = True
+            else:
+                skip_block = False
+
+        if not skip_block:
+            current_message.append(line.strip().lower())
+
+    if not skip_block and current_message:
+        filtered_lines.append(' '.join(current_message).strip().lower())
+
+    return '\n\n'.join(filtered_lines)
+
+# --- Process 2: Categorizing file contents based on specific issues ---
 
 # Initialize global result storage with various categories
 global_result = {
@@ -112,10 +74,10 @@ global_result = {
     "TT Granite Network Info Error": [],
     "TT HSBA Reappointment": [],
     "Resource Management Issue": [],
-    "Other": []  # This will store both the ticket/ID and the message content
+    "Other": []
 }
 
-# Function to process the text file input
+# Function to process the text file input and categorize messages
 def process_messages_from_file(file_contents):
     global global_result
     
@@ -168,166 +130,54 @@ def process_messages_from_file(file_contents):
         "Resource Management Issue": r"\bsalah zone id\b"
     }
 
-    # Result storage
-    result = {
-        "Full Capping": [],
-        "Order Missing/ Pending Processing": [],
-        "Missing Manual Assign Button": [],
-        "Next Activity Not Appear": [],
-        "Double @iptv": [],
-        "Equipment New to Existing": [],
-        "Design & Assign": [],
-        "HSI No Password": [],
-        "CPE New/ Existing/ Delete": [],
-        "Update CPE Equipment Details": [],
-        "Missing/ Update Network Details": [],
-        "Update Contact Details": [],
-        "Update Customer Email": [],
-        "Bypass HSI": [],
-        "Bypass Voice": [],
-        "Bypass IPTV": [],
-        "Bypass Extra Port": [],
-        "Revert Order to TMF": [],
-        "Release Assign To Me": [],
-        "Propose Cancel to Propose Reappt/ Return": [],
-        "Unsync Order": [],
-        "Order Transfer SWIFT-TMF": [],
-        "Duplicated Order Activity": [],
-        "Reopen Jumpering": [],
-        "TT RG6/ Combo Update": [],
-        "TT CPE LOV": [],
-        "TT Unable to Slot/ Error 400": [],
-        "TT Missing/ Update Network Details": [],
-        "TT V1P": [],
-        "TT CPE Not Tally with Physical": [],
-        "TT Link LR Appear TMF": [],
-        "TT Blank Source Skill": [],
-        "ID Locking/ Unlock/ 3rd Attempt": [],
-        "TT Unsync": [],
-        "TT Missing": [],
-        "TT Update DiagnosisCode": [],
-        "TT Granite Network Info Error": [],
-        "TT HSBA Reappointment": [],
-        "Resource Management Issue": [],
-        "Other": [] #maybe due to invalid order/ ticket number/ duplicate issues/ standalone ticket/ order numbers/ issue mmg xletak, cuma minta bantuan ja
-        #xdeng na 'mohon bantuan followed by order#/ ticket#(no slot) -- kalau tak, langgar dengan issue 'order missing'/ 'full capping'
-        #basically masuk 'others', due to NO CONTEXT!
-    }
-
-    # Track tickets and IDs already added
-    added_tickets = set()
-    added_ids = set()
-
     # Process each message block
     for message in messages:
-        found_issue = False
-
-        # Check for issues and collect tickets/IDs
         for issue, pattern in issue_patterns.items():
             if re.search(pattern, message, re.IGNORECASE):
-                tickets = re.findall(ticket_order_pattern, message)
-                ids = re.findall(id_pattern, message)
-
-                if issue == "Full Capping":
-                    if ids:
-                        global_result[issue].extend(i for i in ids if i not in added_ids)
-                        added_ids.update(ids)
-                else:
-                    if tickets:
-                        global_result[issue].extend(t for t in tickets if t not in added_tickets)
-                        added_tickets.update(tickets)
-                    if ids:
-                        global_result[issue].extend(i for i in ids if i not in added_ids)
-                        added_ids.update(ids)
-                
-                found_issue = True
+                global_result[issue].append(message)
                 break
-
-        # If no specific issue is found, categorize under "Other"
-        if not found_issue:
-            tickets = re.findall(ticket_order_pattern, message)
-            ids = re.findall(id_pattern, message)
-            if tickets or ids:
-                if tickets:
-                    global_result["Other"].extend([(t, message) for t in tickets if t not in added_tickets])
-                    added_tickets.update(tickets)
-                if ids:
-                    global_result["Other"].extend([(i, message) for i in ids if i not in added_ids])
-                    added_ids.update(ids)
+        else:
+            global_result["Other"].append(message)
 
 # Function to process all files
 def process_uploaded_files(uploaded_files):
     global global_result
-    global_result = {
-        "Full Capping": [],
-            "Order Missing/ Pending Processing": [],
-            "Missing Manual Assign Button": [],
-            "Next Activity Not Appear": [],
-            "Double @iptv": [],
-            "Equipment New to Existing": [],
-            "Design & Assign": [],
-            "HSI No Password": [],
-            "CPE New/ Existing/ Delete": [],
-            "Update CPE Equipment Details": [],
-            "Missing/ Update Network Details": [],
-            "Update Contact Details": [],
-            "Update Customer Email": [],
-            "Bypass HSI": [],
-            "Bypass Voice": [],
-            "Bypass IPTV": [],
-            "Bypass Extra Port": [],
-            "Revert Order to TMF": [],
-            "Release Assign To Me": [],
-            "Propose Cancel to Propose Reappt/ Return": [],
-            "Unsync Order": [],
-            "Order Transfer SWIFT-TMF": [],
-            "Duplicated Order Activity": [],
-            "Reopen Jumpering": [],
-            "TT RG6/ Combo Update": [],
-            "TT CPE LOV": [],
-            "TT Unable to Slot/ Error 400": [],
-            "TT Missing/ Update Network Details": [],
-            "TT V1P": [],
-            "TT CPE Not Tally with Physical": [],
-            "TT Link LR Appear TMF": [],
-            "TT Blank Source Skill": [],
-            "ID Locking/ Unlock/ 3rd Attempt": [],
-            "TT Unsync": [],
-            "TT Missing": [],
-            "TT Update DiagnosisCode": [],
-            "TT Granite Network Info Error": [],
-            "TT HSBA Reappointment": [],
-            "Resource Management Issue": [],
-            "Other": []
-    }
-
+    global_result = {key: [] for key in global_result}  # Reset the global_result
+    
     for uploaded_file in uploaded_files:
         file_contents = uploaded_file.read().decode("utf-8")
         process_messages_from_file(file_contents)
     
     # Output the accumulated result
     output = []
-    for issue, numbers in global_result.items():
-        if numbers:
+    for issue, messages in global_result.items():
+        if messages:
             output.append(f"{issue}:")
-            if issue == "Other":
-                for number, message in numbers:
-                    output.append(f"{number} - Message: {message}")
-            else:
-                for number in numbers:
-                    output.append(number)
+            output.append('\n'.join(messages))
             output.append("")  # Blank line after each issue
-    return "\n".join(output)
+    return '\n'.join(output)
 
-# Streamlit app interface
-st.title("Categorize File Contents")
+# --- Streamlit app interface ---
+
+st.title("Combined Message Filtering and Categorizing App")
+
+# Input area for base names
+base_names_input = st.text_area("Enter base names (comma-separated)", "Hartina, Tina, Normah, Pom, Afizan, Pijan, Ariff, Dheffirdaus, Dhef, Hazrina, Rina, Nurul, Huda, Zazarida, Zaza, Eliasaph Wan, Wan")
+base_names = [name.strip() for name in base_names_input.split(",")]
 
 # File upload for text files
 uploaded_files = st.file_uploader("Upload text files", type="txt", accept_multiple_files=True)
 
-# Button to trigger file categorization
-if uploaded_files and st.button('Categorize file contents'):
-    categorized_output = process_uploaded_files(uploaded_files)
+# First process: Filtering messages based on base names
+if uploaded_files and st.button('Cleanse file'):
+    all_output = []
+    
+    for uploaded_file in uploaded_files:
+        file_contents = uploaded_file.read().decode("utf-8")
+        filtered_text = filter_messages(file_contents, base_names)
+        all_output.append(f"===Filtered content from {uploaded_file.name}:===\n{filtered_text}")
+    
+    combined_output = "\n".join(all_output)
     
     # Insert CSS to disable cursor change for disabled text_area
     st.markdown(
@@ -341,6 +191,15 @@ if uploaded_files and st.button('Categorize file contents'):
         unsafe_allow_html=True
     )
 
-    # Display the output in a disabled text area
-    st.text_area("Categorized Output", value=categorized_output, height=400, disabled=True)
+    # Display the filtered output
+    st.text_area("Filtered Output", value=combined_output, height=400, disabled=True)
 
+# Add a horizontal line to separate the two processes
+st.markdown("---")
+
+# Second process: Categorizing file contents based on specific issues
+if uploaded_files and st.button('Categorize file contents'):
+    categorized_output = process_uploaded_files(uploaded_files)
+    
+    # Display the categorized output
+    st.text_area("Categorized Output", value=categorized_output, height=400, disabled=True)
