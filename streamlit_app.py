@@ -1,104 +1,67 @@
-import streamlit as st
 import re
-from io import StringIO
+import streamlit as st
+import os
 
-# Initialize global result storage with various categories
-global_result = {
-    "Full Capping": [],
-    "Order Missing/ Pending Processing": [],
-    "Missing Manual Assign Button": [],
-    "Other": []
-}
+def filter_messages(file_contents, base_names):
+    # Define the timestamp pattern
+    timestamp_pattern = re.compile(r'\[\d{2}:\d{2}, \d{1,2}/\d{1,2}/\d{4}\]|^\[\d{1,2}/\d{1,2}/\d{4} \d{1,2}:\d{2} [APM]{2}]')
 
-# Function to process the text file input
-def process_messages_from_string(content):
-    global global_result
-    messages = re.split(r'\n(?=\[\d{1,2}/\d{1,2}/\d{4} \d{1,2}:\d{2} (?:am|pm)\])|\[\d{2}:\d{2}, \d{1,2}/\d{1,2}/\d{4}\]', content)
+    # Create a dynamic regex pattern for detecting variations of the base names
+    name_patterns = [re.compile(rf'\b{re.escape(name)}\b', re.IGNORECASE) for name in base_names]
 
-    # Regular expressions for different patterns
-    ticket_order_pattern = r'\b1-\d{9,11}\b|\bT-\d{9}\b|\bt-\d{10}\b|\b1-[a-z0-9]{7}\b|\binc\b'
-    id_pattern = r'\bQ\d{6}\b|\bq\d{6}\b|\bTM\d{5}\b|\btm\d{5}\b'
-    
-    # Issue-specific patterns
-    issue_patterns = {
-        "Full Capping": r'\bfull cap[p]?ing\b',
-        "Order Missing/ Pending Processing": r'\b(di|dlm|dalam) (oal|order(?: activity)?(?: list)?)\b',
-        "Missing Manual Assign Button": r'\bma\b|\bma btn xappear\b'
-    }
+    filtered_lines = []
+    skip_block = False
+    current_message = []
 
-    # Result storage
-    result = {
-        "Full Capping": [],
-        "Order Missing/ Pending Processing": [],
-        "Missing Manual Assign Button": [],
-        "Other": []
-    }
+    for line in file_contents.splitlines():
+        # Check if the line starts with a timestamp, indicating a new message
+        if timestamp_pattern.match(line):
+            if current_message:
+                # If we have accumulated message lines, join them and add to the output
+                filtered_lines.append(' '.join(current_message).strip().lower())
+                current_message = []
 
-    added_tickets = set()
-    added_ids = set()
-
-    for message in messages:
-        found_issue = False
-
-        for issue, pattern in issue_patterns.items():
-            if re.search(pattern, message, re.IGNORECASE):
-                tickets = re.findall(ticket_order_pattern, message)
-                ids = re.findall(id_pattern, message)
-
-                if issue == "Full Capping":
-                    if ids:
-                        result[issue].extend(i for i in ids if i not in added_ids)
-                        added_ids.update(ids)
-                else:
-                    if tickets:
-                        result[issue].extend(t for t in tickets if t not in added_tickets)
-                        added_tickets.update(tickets)
-                    if ids:
-                        result[issue].extend(i for i in ids if i not in added_ids)
-                        added_ids.update(ids)
-
-                found_issue = True
-                break
-
-        if not found_issue:
-            tickets = re.findall(ticket_order_pattern, message)
-            ids = re.findall(id_pattern, message)
-            if tickets or ids:
-                if tickets:
-                    result["Other"].extend([(t, message) for t in tickets if t not in added_tickets])
-                    added_tickets.update(tickets)
-                if ids:
-                    result["Other"].extend([(i, message) for i in ids if i not in added_ids])
-                    added_ids.update(ids)
-
-    return result
-
-# Streamlit app
-st.title("Message Processing App")
-
-uploaded_files = st.file_uploader("Choose text files", accept_multiple_files=True, type='txt')
-
-if uploaded_files:
-    # Read and process each uploaded file
-    global_result.clear()
-    for uploaded_file in uploaded_files:
-        content = StringIO(uploaded_file.getvalue().decode('utf-8')).read()
-        result = process_messages_from_string(content)
-
-        # Update global result
-        for key, value in result.items():
-            if isinstance(value, list):
-                global_result[key].extend(value)
-
-    # Display results
-    st.subheader("Processing Results")
-
-    for issue, numbers in global_result.items():
-        if numbers:
-            st.write(f"**{issue}:**")
-            if issue == "Other":
-                for number, message in numbers:
-                    st.write(f"{number} - Message: {message}")
+            # Check if the line contains any of the base names or their variations
+            if any(pattern.search(line) for pattern in name_patterns):
+                skip_block = True
             else:
-                for number in numbers:
-                    st.write(number)
+                skip_block = False
+
+        # If not skipping, add the line to the current message
+        if not skip_block:
+            current_message.append(line.strip().lower())  # Convert to lowercase
+
+    # Append the last message if it wasn't skipped
+    if not skip_block and current_message:
+        filtered_lines.append(' '.join(current_message).strip().lower())
+
+    # Join the filtered lines back into a single string, ensuring each message is separated by '\n\n'
+    filtered_text = '\n\n'.join(filtered_lines)
+    
+    return filtered_text
+
+# Streamlit interface
+st.title("Message Filtering App")
+
+# Input area for base names
+base_names_input = st.text_area("Enter base names (comma-separated)", "Hartina, Tina, Normah, Pom, Afizan, Pijan, Ariff, Dheffirdaus, Dhef, Hazrina, Rina, Nurul, Huda, Zazarida, Zaza, Eliasaph Wan, Wan, ] : , ] :")
+base_names = [name.strip() for name in base_names_input.split(",")]
+
+# File upload (support for up to 2 text files)
+uploaded_files = st.file_uploader("Upload text files", type="txt", accept_multiple_files=True, max_files=2)
+
+if uploaded_files and st.button('Cleanse file'):
+    all_output = []
+    
+    for uploaded_file in uploaded_files:
+        # Read file contents
+        file_contents = uploaded_file.read().decode("utf-8")
+        
+        # Process the file and filter the messages
+        filtered_text = filter_messages(file_contents, base_names)
+        
+        # Show the output in a text area
+        all_output.append(f"Filtered content from {uploaded_file.name}:\n{filtered_text}")
+    
+    # Display the output for all files in a single text area
+    st.text_area("Filtered Output", value="\n\n".join(all_output), height=400)
