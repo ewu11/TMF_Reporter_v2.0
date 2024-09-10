@@ -47,21 +47,25 @@ st.title("Message Filtering App")
 base_names_input = st.text_area("Enter base names (comma-separated)", "Hartina, Tina, Normah, Pom, Afizan, Pijan, Ariff, Dheffirdaus, Dhef, Hazrina, Rina, Nurul, Huda, Zazarida, Zaza, Eliasaph Wan, Wan, ] : , ] :")
 base_names = [name.strip() for name in base_names_input.split(",")]
 
-# File upload (support for up to 2 text files)
-uploaded_files = st.file_uploader("Upload text files", type="txt", accept_multiple_files=True, max_files=2)
+# File upload (without the max_files argument)
+uploaded_files = st.file_uploader("Upload text files", type="txt", accept_multiple_files=True)
 
-if uploaded_files and st.button('Cleanse file'):
-    all_output = []
-    
-    for uploaded_file in uploaded_files:
-        # Read file contents
-        file_contents = uploaded_file.read().decode("utf-8")
+# Ensure only up to 2 files are processed
+if uploaded_files and len(uploaded_files) > 2:
+    st.error("You can only upload up to 2 files.")
+else:
+    if uploaded_files and st.button('Cleanse file'):
+        all_output = []
         
-        # Process the file and filter the messages
-        filtered_text = filter_messages(file_contents, base_names)
+        for uploaded_file in uploaded_files:
+            # Read file contents
+            file_contents = uploaded_file.read().decode("utf-8")
+            
+            # Process the file and filter the messages
+            filtered_text = filter_messages(file_contents, base_names)
+            
+            # Show the output in a text area
+            all_output.append(f"Filtered content from {uploaded_file.name}:\n{filtered_text}")
         
-        # Show the output in a text area
-        all_output.append(f"Filtered content from {uploaded_file.name}:\n{filtered_text}")
-    
-    # Display the output for all files in a single text area
-    st.text_area("Filtered Output", value="\n\n".join(all_output), height=400)
+        # Display the output for all files in a single text area
+        st.text_area("Filtered Output", value="\n\n".join(all_output), height=400)
