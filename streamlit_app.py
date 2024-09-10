@@ -1,9 +1,7 @@
 import re
 import streamlit as st
 
-# --- Process 1: Filtering messages based on base names ---
-
-# Function to filter messages based on base names
+# First Process: Function to filter messages based on base names
 def filter_messages(file_contents, base_names):
     timestamp_pattern = re.compile(r'\[\d{2}:\d{2}, \d{1,2}/\d{1,2}/\d{4}\]|^\[\d{1,2}/\d{1,2}/\d{4} \d{1,2}:\d{2} [APM]{2}]')
     name_patterns = [re.compile(rf'\b{re.escape(name)}\b', re.IGNORECASE) for name in base_names]
@@ -31,9 +29,7 @@ def filter_messages(file_contents, base_names):
 
     return '\n\n'.join(filtered_lines)
 
-# --- Process 2: Categorizing file contents based on specific issues ---
-
-# Initialize global result storage with various categories
+# Second Process: Function to process text file input and categorize issues
 global_result = {
     "Full Capping": [],
     "Order Missing/ Pending Processing": [],
@@ -77,17 +73,15 @@ global_result = {
     "Other": []
 }
 
-# Function to process the text file input and categorize messages
 def process_messages_from_file(file_contents):
     global global_result
-    
+
     messages = re.split(r'\n(?=\[\d{1,2}/\d{1,2}/\d{4} \d{1,2}:\d{2} (?:am|pm)\])|\[\d{2}:\d{2}, \d{1,2}/\d{1,2}/\d{4}\]', file_contents)
     
     # Regular expressions for different patterns
-    ticket_order_pattern = r'\b1-\d{9,11}\b|\bT-\d{9}\b|\bt-\d{10}\b|\b1-[a-z0-9]{7}\b|\binc\b'  # Ticket or order numbers
-    id_pattern = r'\bQ\d{6}\b|\bq\d{6}\b|\bTM\d{5}\b|\btm\d{5}\b'  # ID numbers (e.g., Q107888)
-    
-    # Issue-specific patterns
+    ticket_order_pattern = r'\b1-\d{9,11}\b|\bT-\d{9}\b|\bt-\d{10}\b|\b1-[a-z0-9]{7}\b|\binc\b'
+    id_pattern = r'\bQ\d{6}\b|\bq\d{6}\b|\bTM\d{5}\b|\btm\d{5}\b'
+
     issue_patterns = {
         "Full Capping": r'\bfull cap[p]?ing\b|\bbukan dlm id ui\b|\bcap(p)?ing full\b|\b(tidak|x) as(s)?ign pd ru\b|\bfull slot\b|\btidak boleh ass(i)?gn pada team\b|\bslot id( ni)? x( ?)lepas\b|\bn(a)?k slot id\b|\bfull dalam list\b|\bcapping penuh\b|\bid.*full t(a)?p(i)? d(a)?l(a)?m list tmf.*ada \d order\b|\bui.*(tak|x) n(a)?mp(a)?k (d)?(e)?kat dia\b|\bui kata (x|tak) n(a)?mp(a)?k o(r)?d(e)?r\b|\bbukan ui pnya\b|\bslot balik p(a)?d(a)? (team|ru|ra|ui)\b|\border return(ed)? s(e)?m(a)?l(a)?m.*m(a)?s(i)?h ada d(a)?l(a)?m tm( )?f(orce)?.*ru\b|\bui inf(o)?(r)?m (t(a)?k|x) n(a)?mp(a)?k order\b|\bini order m(e)?m(a)?(n)?g ru p(u)?(n)?ya\b|\b(belum ada|xada|teda|tiada) id mana(2)? ru\b|\b(tidak|tak|x) d(a)?p(a)?t( )?(nak)?assign.*(ru|team)\b|\bord(er)?.*tak( )?d(a)?p(a)?t.*assign p(a)?d(a)? (team|ru)\b|\bbukan order (ui|team)\b|\bid( dah)?( )?full.*d(a)?l(a)?m tm( )?f(orce)?.*hanya ada [1-9] order\b|\b(takleh|xboleh|xleh) slot id\b|\bin( )?hand ui.*assign( ke)? ui\b|\bmasih full/7 order\b|\bin hand.*yg nak assign\b|\bid.*ada \d order t(a)?p(i)? id.*full\b|\bfull.*t(a)?p(i)?.*tm( )?f(orce)? ada \d order\b|\bo(r)?der (d(i)?|p(a)?d(a)?)( id)? ui\b|\bid ni.*(x|tak|tidak)( )?l(e)?p(a)?s.*slot order( lain)?\b|\bd(a)?h full (x|tak)( )?l(e)?p(a)?s slot( order)?\b|\border# ada dlm inhand.*order# nak assign ke ui\b|\btmf saya detect baru \d order\b|\border.*perlu.*masuk.*t(a)?p(i)? (x|tak)( )?(boleh|leh)( masuk)?\b|\bini b(u)?k(a)?n.*ini p(e)?(r)?lu.*masuk(kan)?\b|\btmf.*detect \d order\b|\bfull cappinng\b|\bcapping.*(full|p(e)?n(u)?h)\b|\border dah assign(ed)?.*id.*t(a)?p(i)?.*(tak|x) n(a)?mp(a)?k\b',
         "Order Missing/ Pending Processing": r'\b(di|dlm|dalam) (oal|order(?: activity)?(?: list)?)\b|\btmf (?:tak (?:wujud|appear)|x ?appear)\b|\b(di dlm oal|di oal|oal missing|tmf tak wujud|oal record not found|oal not found|oal xfound|oal xappear|oal not appear|oal x appear)\b|\b(?:tiada |masukkan |appear )?(?:order )?(dlm|dalam|in) rol\b|\b(tiada (dalam|dlm)|xda(?: di)?)( scheduled page)\b|\bponr\b|\bpending processing\b|\bmissing( dalam)? oal\b|\b(x?|tak ) masuk( di)?( dlm| dalam)( bakul| basket)\b|\b(?:order\s)?(?:tak\s|tiada\s|xda\s)?(?:masuk\s)?(?:dalam\s)?(?:bakul|basket)\b|\b(tiada|xda|takda) di( dalam)?( page)? activity\b|\btask sync\b|\bpending processing\b|\b(tak|x|tiada)\s*(?:di|dekat|dkt|dalam|dlm)?\s*(scheduled|unscheduled)( page)?\b|\btiada (dlm|dalam) (activity|act|aktivity|actvty) list\b|\b(xtvt|act|activity|actvty) (tak|x) (wujud|wjd)\b|\bmasukkan semula.*rol\b|\bstat(u)?(s)? unshedule(d)?.*(ra|mir|cc)\b|\bstatus( pending)?( )?processing\b|\bo(r)?d(e)?r.*(x|tak)( )?masuk (tmf|tmforce)\b|\b(order )?jadi unschedule(d)?\b|\breschedule(d)?( semula)? ke tm( )?f(orce)?\b|\border x( )?appear( at| di| in)? oal\b|\border ni ada (di)?( )?mana\b|\border return.*status unschedul(e)?(d)?\b|\bb(u)?(t)?t(o)?n return (tiada|xda|xde|takda)\b|\border return(ed)? jadi uns(c)?hedule(d)?\b|\border pending pro(c)?es(s)?ing\b|\border.*hilang.*id ui\b|\border ra.*(tak|x) (m(a)?s(u)?k d(a)?l(a)?m (act(ivity)?)|aktiviti|xtvt) order list\b|\bupdate semula ke rol\b|\btiada|xda d(a)?l(a)?m ro(l|c)\b|\bescalate( )?(ke|m(a)?s(u)?k|d(a)?l(a)?m)?( )?rol\b|\border return j(a)?d(i)? unschedul(e)?(d)?\b|\bb(e)?l(u)?m appear d(a)?l(a)?m act(ivity)? list\b|\border (tidak|x|tak) n(a)?m(p)?(a)?k d(a)?l(a)?m.*d\b|\brecord not found.*slot\b',
@@ -130,76 +124,96 @@ def process_messages_from_file(file_contents):
         "Resource Management Issue": r"\bsalah zone id\b"
     }
 
-    # Process each message block
+    added_tickets = set()
+    added_ids = set()
+
     for message in messages:
+        found_issue = False
+
         for issue, pattern in issue_patterns.items():
             if re.search(pattern, message, re.IGNORECASE):
-                global_result[issue].append(message)
-                break
-        else:
-            global_result["Other"].append(message)
+                tickets = re.findall(ticket_order_pattern, message)
+                ids = re.findall(id_pattern, message)
 
-# Function to process all files
+                if issue == "Full Capping":
+                    if ids:
+                        global_result[issue].extend(i for i in ids if i not in added_ids)
+                        added_ids.update(ids)
+                else:
+                    if tickets:
+                        global_result[issue].extend(t for t in tickets if t not in added_tickets)
+                        added_tickets.update(tickets)
+                    if ids:
+                        global_result[issue].extend(i for i in ids if i not in added_ids)
+                        added_ids.update(ids)
+
+                found_issue = True
+                break
+
+        if not found_issue:
+            tickets = re.findall(ticket_order_pattern, message)
+            ids = re.findall(id_pattern, message)
+            if tickets or ids:
+                if tickets:
+                    global_result["Other"].extend([(t, message) for t in tickets if t not in added_tickets])
+                    added_tickets.update(tickets)
+                if ids:
+                    global_result["Other"].extend([(i, message) for i in ids if i not in added_ids])
+                    added_ids.update(ids)
+
 def process_uploaded_files(uploaded_files):
     global global_result
-    global_result = {key: [] for key in global_result}  # Reset the global_result
-    
+    global_result = {key: [] for key in global_result}
+
     for uploaded_file in uploaded_files:
         file_contents = uploaded_file.read().decode("utf-8")
         process_messages_from_file(file_contents)
     
-    # Output the accumulated result
     output = []
-    for issue, messages in global_result.items():
-        if messages:
+    for issue, numbers in global_result.items():
+        if numbers:
             output.append(f"{issue}:")
-            output.append('\n'.join(messages))
+            if issue == "Other":
+                for number, message in numbers:
+                    output.append(f"{number} - Message: {message}")
+            else:
+                for number in numbers:
+                    output.append(number)
             output.append("")  # Blank line after each issue
-    return '\n'.join(output)
+    return "\n".join(output)
 
-# --- Streamlit app interface ---
+# Streamlit App: Interface for the two processes
+st.title("Combined Message Filtering and Categorization App")
 
-st.title("Combined Message Filtering and Categorizing App")
+# First Process UI
+st.header("Message Filtering")
 
-# Input area for base names
 base_names_input = st.text_area("Enter base names (comma-separated)", "Hartina, Tina, Normah, Pom, Afizan, Pijan, Ariff, Dheffirdaus, Dhef, Hazrina, Rina, Nurul, Huda, Zazarida, Zaza, Eliasaph Wan, Wan")
 base_names = [name.strip() for name in base_names_input.split(",")]
 
-# File upload for text files
-uploaded_files = st.file_uploader("Upload text files", type="txt", accept_multiple_files=True)
+uploaded_files_filter = st.file_uploader("Upload text files for filtering", type="txt", accept_multiple_files=True)
 
-# First process: Filtering messages based on base names
-if uploaded_files and st.button('Cleanse file'):
+if uploaded_files_filter and st.button('Filter Messages'):
     all_output = []
     
-    for uploaded_file in uploaded_files:
+    for uploaded_file in uploaded_files_filter:
         file_contents = uploaded_file.read().decode("utf-8")
         filtered_text = filter_messages(file_contents, base_names)
         all_output.append(f"===Filtered content from {uploaded_file.name}:===\n{filtered_text}")
     
     combined_output = "\n\n".join(all_output)
     
-    # Insert CSS to disable cursor change for disabled text_area
-    st.markdown(
-        """
-        <style>
-        .stTextArea textarea[disabled] {
-            cursor: default;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-
-    # Display the filtered output
     st.text_area("Filtered Output", value=combined_output, height=400, disabled=True)
 
-# Add a horizontal line to separate the two processes
-st.markdown("---")
+# Horizontal line separator
+st.markdown("***")
 
-# Second process: Categorizing file contents based on specific issues
-if uploaded_files and st.button('Categorize file contents'):
-    categorized_output = process_uploaded_files(uploaded_files)
+# Second Process UI
+st.header("Message Categorization")
+
+uploaded_files_categorize = st.file_uploader("Upload text files for categorization", type="txt", accept_multiple_files=True)
+
+if uploaded_files_categorize and st.button('Categorize Messages'):
+    categorized_output = process_uploaded_files(uploaded_files_categorize)
     
-    # Display the categorized output
     st.text_area("Categorized Output", value=categorized_output, height=400, disabled=True)
