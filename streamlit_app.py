@@ -177,7 +177,7 @@ if uploaded_files and st.button('Cleanse file'):
         filtered_text = filter_messages(file_contents, base_names)
         all_output.append(f"===Filtered content from {uploaded_file.name}:===\n{filtered_text}")
     
-    combined_output = "\n".join(all_output)
+    combined_output = "\n\n".join(all_output)
     
     # Insert CSS to disable cursor change for disabled text_area
     st.markdown(
