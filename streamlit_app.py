@@ -44,17 +44,19 @@ def process_uploaded_files_filtering(uploaded_files, base_names):
     return combined_output
 
 # Streamlit interface for Process 1 (Message Filtering)
-st.title("Message Filtering & Categorization App")
+st.title("TMF Reporter v2.0")
 
 # Horizontal line between processes
 st.markdown("---")
 
+st.header("1. Text Cleansing")
+
 # Process 1: Input area for base names
-base_names_input = st.text_area("Enter base names (comma-separated)", "Hartina, Tina, Normah, Pom, Afizan, Pijan, Ariff, Dheffirdaus, Dhef, Hazrina, Rina, Nurul, Huda, Zazarida, Zaza, Eliasaph Wan, Wan, ] : , ] :")
+base_names_input = st.text_area("Enter names (To be removed when cleasing text file)", "Hartina, Tina, Normah, Pom, Afizan, Pijan, Ariff, Dheffirdaus, Dhef, Hazrina, Rina, Nurul, Huda, Zazarida, Zaza, Eliasaph Wan, Wan, ] : , ] :")
 base_names = [name.strip() for name in base_names_input.split(",")]
 
 # File upload for Process 1
-uploaded_files_filter = st.file_uploader("Upload text files for filtering", type="txt", accept_multiple_files=True)
+uploaded_files_filter = st.file_uploader("Upload text file(s) for cleansing (Max 2 text files)", type="txt", accept_multiple_files=True)
 
 # Ensure only up to 2 files are processed for filtering
 if uploaded_files_filter and len(uploaded_files_filter) > 2:
@@ -89,6 +91,8 @@ else:
 
 # Horizontal line between processes
 st.markdown("---")
+
+st.header("2. Text Categorization")
 
 # Process 2: Categorization logic remains the same as before
 # Initialize global result storage with various categories
@@ -305,7 +309,7 @@ def process_uploaded_files_categorization(uploaded_files):
     return "\n".join(output)
 
 # File upload for Process 2
-uploaded_files_categorize = st.file_uploader("Upload text files for categorization", type="txt", accept_multiple_files=True)
+uploaded_files_categorize = st.file_uploader("Upload text file(s) for categorization (Max 2 text files)", type="txt", accept_multiple_files=True)
 
 # Button to trigger file categorization
 if uploaded_files_categorize and st.button('Categorize file contents'):
