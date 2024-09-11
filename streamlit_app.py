@@ -137,7 +137,7 @@ global_result = {
 # Function to process messages from file (Process 2)
 def process_messages_from_file(file_contents):
     global global_result
-    messages = re.split(r'\n(?=\[\d{1,2}/\d{1,2}/\d{4} \d{1,2}:\d{2} (?:am|pm)\])|\[\d{2}:\d{2}, \d{1,2}/\d{1,2}/\d{4}\]', file_contents)
+    messages = re.split(r'\n(?=\[\d{1,2}/\d{1,2}/\d{4} \d{1,2}:\d{2} (?:am|pm)\])|\[\d{2}:\d{2}, \d{1,2}/\d{1,2}/\d{4}\]|\[\d{1,2}:\d{2} (?:am|pm), \d{2}/\d{2}/\d{4}\]', file_contents)
 
     # Regular expressions for different patterns
     ticket_order_pattern = r'\b1-\d{9,11}\b|\bT-\d{9}\b|\bt-\d{10}\b|\b1-[a-z0-9]{7}\b|\binc\b'  # Ticket or order numbers
@@ -275,6 +275,18 @@ def process_uploaded_files_categorization(uploaded_files):
     for uploaded_file in uploaded_files:
         file_contents = uploaded_file.read().decode("utf-8")
         process_messages_from_file(file_contents)
+
+    # Insert CSS to disable the cursor change for disabled text_area
+        st.markdown(
+            """
+            <style>
+            .stTextArea textarea[disabled] {
+                cursor: default;
+            }
+            </style>
+            """,
+            unsafe_allow_html=True
+        )
     
     # Output the accumulated result
     output = []
