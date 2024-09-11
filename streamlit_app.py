@@ -38,9 +38,9 @@ def process_uploaded_files_filtering(uploaded_files, base_names):
     for uploaded_file in uploaded_files:
         file_contents = uploaded_file.read().decode("utf-8")
         filtered_text = filter_messages(file_contents, base_names)
-        all_output.append(f"===Filtered content from {uploaded_file.name}:===\n{filtered_text}")
+        all_output.append(f"===Cleansed content from {uploaded_file.name}:===\n{filtered_text}")
     
-    combined_output = "\n".join(all_output)
+    combined_output = "\n\n".join(all_output)
     return combined_output
 
 # Streamlit interface for Process 1 (Message Filtering)
@@ -78,12 +78,12 @@ else:
         )
 
         # Display the output in a disabled text area
-        st.text_area("Filtered Output", value=filtered_output, height=400, disabled=True)
+        st.text_area("Cleansed Output", value=filtered_output, height=400, disabled=True)
 
         # Add a download button for the filtered text
         download_data = BytesIO(filtered_output.encode("utf-8"))
         st.download_button(
-            label="Download Filtered Text",
+            label="Download Cleansed Text",
             data=download_data,
             file_name="filtered_output.txt",
             mime="text/plain"
