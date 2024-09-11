@@ -5,7 +5,7 @@ from io import BytesIO
 # Function to filter messages based on base names
 def filter_messages(file_contents, base_names):
     # timestamp_pattern = re.compile(r'\[\d{2}:\d{2}, \d{1,2}/\d{1,2}/\d{4}\]|^\[\d{1,2}/\d{1,2}/\d{4} \d{1,2}:\d{2} [APM]{2}]')
-    timestamp_pattern = re.compile(r'\[\d{1,2}:\d{2} (?:am|pm), \d{2}/\d{2}/\d{4}\]|\n(?=\[\d{1,2}/\d{1,2}/\d{4} \d{1,2}:\d{2} (?:am|pm)\])|\[\d{2}:\d{2}, \d{1,2}/\d{1,2}/\d{4}\]')
+    timestamp_pattern = re.compile(r'\[\d{1,2}/\d{1,2}/\d{4} \d{1,2}:\d{2} (?:am|pm)\]|\[\d{1,2}:\d{2} (?:am|pm), \d{1,2}/\d{1,2}/\d{4}\]')
     name_patterns = [re.compile(rf'\b{re.escape(name)}\b', re.IGNORECASE) for name in base_names]
 
     filtered_lines = []
@@ -143,7 +143,8 @@ global_result = {
 def process_messages_from_file(file_contents):
     global global_result
     # messages = re.split(r'\n(?=\[\d{1,2}/\d{1,2}/\d{4} \d{1,2}:\d{2} (?:am|pm)\])|\[\d{2}:\d{2}, \d{1,2}/\d{1,2}/\d{4}\]|\[\d{1,2}:\d{2} (?:am|pm), \d{2}/\d{2}/\d{4}\]', file_contents)
-    messages = re.split(r'\[\d{1,2}:\d{2} (?:am|pm), \d{2}/\d{2}/\d{4}\]|\n(?=\[\d{1,2}/\d{1,2}/\d{4} \d{1,2}:\d{2} (?:am|pm)\])|\[\d{2}:\d{2}, \d{1,2}/\d{1,2}/\d{4}\]', file_contents)
+    # messages = re.split(r'\[\d{1,2}:\d{2} (?:am|pm), \d{2}/\d{2}/\d{4}\]|\n(?=\[\d{1,2}/\d{1,2}/\d{4} \d{1,2}:\d{2} (?:am|pm)\])|\[\d{2}:\d{2}, \d{1,2}/\d{1,2}/\d{4}\]', file_contents)
+    messages = re.split(r'\[\d{1,2}/\d{1,2}/\d{4} \d{1,2}:\d{2} (?:am|pm)\]|\[\d{1,2}:\d{2} (?:am|pm), \d{1,2}/\d{1,2}/\d{4}\]', file_contents)
     
     # Regular expressions for different patterns
     ticket_order_pattern = r'\b1-\d{9,11}\b|\bT-\d{9}\b|\bt-\d{10}\b|\b1-[a-z0-9]{7}\b|\binc\b'  # Ticket or order numbers
