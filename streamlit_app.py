@@ -89,7 +89,7 @@ else:
         st.download_button(
             label="Download cleansed text",
             data=download_data,
-            file_name="filtered_output.txt",
+            file_name="cleansed_output.txt",
             mime="text/plain"
         )
 
