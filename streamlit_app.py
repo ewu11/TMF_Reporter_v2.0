@@ -56,7 +56,7 @@ st.markdown("---")
 st.header("1. Text Cleansing")
 
 # Process 1: Input area for base names
-base_names_input = st.text_area("Enter names (to be removed when cleansing text file)", "Hartina, Tina, Normah, Pom, Afizan, Pijan, Ariff, Dheffirdaus, Dhef, Hazrina, Rina, Nurul, Huda, Zazarida, Zaza, Eliasaph Wan, Wan, ] : , ] :")
+base_names_input = st.text_area("Enter names (to be removed when cleansing text file)", "Hartina, Tina, Normah, Pom, Afizan, Pijan, Ariff, Arep, Arip, Dheffirdaus, Dhef, Dheff, Dheft, Hazrina, Rina, Nurul, Huda, Zazarida, Zaza, Eliasaph, Wan, ] : , ] :")
 base_names = [name.strip() for name in base_names_input.split(",")]
 
 # File upload for Process 1
