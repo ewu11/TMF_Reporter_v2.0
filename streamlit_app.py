@@ -327,7 +327,7 @@ def process_uploaded_files_categorization(uploaded_files):
     for issue, numbers in global_result.items():
         if numbers:
             output.append(f"{issue}:")
-            if issue == "Other":
+            if issue == "Others(to manually add into report)":
                 for number, message in numbers:
                     output.append(f"{number.upper()} - Message: {message}")
             else:
