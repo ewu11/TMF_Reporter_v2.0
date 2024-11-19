@@ -247,10 +247,10 @@ def process_messages_from_file(file_contents):
             ids = re.findall(id_pattern, message)
             if tickets or ids:
                 if tickets:
-                    global_result["Others(to manually add into report)"].extend([(t, message) for t in tickets if t not in added_tickets])
+                    global_result["Others (to manually add into report)"].extend([(t, message) for t in tickets if t not in added_tickets])
                     added_tickets.update(tickets)
                 if ids:
-                    global_result["Others(to manually add into report)"].extend([(i, message) for i in ids if i not in added_ids])
+                    global_result["Others (to manually add into report)"].extend([(i, message) for i in ids if i not in added_ids])
                     added_ids.update(ids)
 
 # Function to process all files for categorization (Process 2)
